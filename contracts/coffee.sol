@@ -1,56 +1,61 @@
-//SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
 import "hardhat/console.sol";
 
 contract Coffee {
-    uint256 public constant coffeePrice = 0.002 ether;
+    uint256 public constant coffeePrice  = 0.0002 ether;
     uint256 public totalCoffeesSold;
     uint256 public totalEtherReceived;
 
+    // Custom error definitions
+    error QuantityMustBeGreaterThanZero();
+    error InsufficientEtherSent(uint256 required, uint256 sent);
+    error DirectEtherTransferNotAllowed();
+
+    // Event to log coffee purchases
     event CoffeePurchased(address indexed buyer, uint256 quantity, uint256 totalCost);
 
-    function buyCoffee(uint256 quantity) public payable {
-        console.log("buyCoffee called with quantity:", quantity);
+    // Function to buy coffee
+    function buyCoffee(uint256 quantity) external payable {
+        if (quantity <= 0) {
+            revert QuantityMustBeGreaterThanZero();
+        }
 
-      require( quantity > 0, "Quantity must be greater than zero");
         uint256 totalCost = coffeePrice * quantity;
-        console.log("Total cost calculated:", totalCost);
-        require(msg.value >= totalCost, "Not enough ether sent");
+        
+        if (msg.value > totalCost) {
+            revert InsufficientEtherSent(totalCost, msg.value);
+        }
 
-        // Update total coffees sold and total ether received
+        // Update the total coffees sold and total ether received
         totalCoffeesSold += quantity;
         totalEtherReceived += totalCost;
-        console.log("Total coffees sold updated:", totalCoffeesSold);
         console.log("Total ether received updated:", totalEtherReceived);
-
-        // Emit an event for the purchase
+        console.log("Total coffee sold updated:", totalCoffeesSold);
+        // Emit the purchase event
         emit CoffeePurchased(msg.sender, quantity, totalCost);
-        console.log("CoffeePurchased event emitted");
 
-        // Refund any excess ether sent
+        // Refund excess Ether sent
         if (msg.value > totalCost) {
             uint256 refundAmount = msg.value - totalCost;
-            console.log("Refunding excess ether:", refundAmount);
             payable(msg.sender).transfer(refundAmount);
         }
     }
 
-    // Function to get the total number of coffees sold
-    function getTotalCoffeesSold() public view returns (uint256) {
-        console.log("getTotalCoffeesSold called");
+    // Fallback function to handle Ether sent directly to the contract
+    receive() external payable {
+        revert DirectEtherTransferNotAllowed();
+    }
+
+    // Public view functions to get totals
+    function getTotalCoffeesSold() external view returns (uint256) {
+        console.log("getTotalCoffeesSold :", totalCoffeesSold);
         return totalCoffeesSold;
     }
 
-    // Function to get the total amount of ether received
-    function getTotalEtherReceived() public view returns (uint256) {
-        console.log("getTotalEtherReceived called");
-        return totalEtherReceived;
-    }
-
-    // Fallback function to handle ether sent directly to the contract
-    receive() external payable {
-        console.log("Ether sent directly to contract, reverting");
-        revert("Please use the buyCoffee function to purchase coffee");
+    function getTotalEtherReceived() external view returns (uint256) {
+         console.log("getTotalEtherReceived :", totalEtherReceived);
+                return totalEtherReceived;
     }
 }

@@ -1,0 +1,135 @@
+[
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "quantity",
+				"type": "uint256"
+			}
+		],
+		"name": "buyCoffee",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "DirectEtherTransferNotAllowed",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "required",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "sent",
+				"type": "uint256"
+			}
+		],
+		"name": "InsufficientEtherSent",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "QuantityMustBeGreaterThanZero",
+		"type": "error"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "buyer",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "quantity",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "totalCost",
+				"type": "uint256"
+			}
+		],
+		"name": "CoffeePurchased",
+		"type": "event"
+	},
+	{
+		"stateMutability": "payable",
+		"type": "receive"
+	},
+	{
+		"inputs": [],
+		"name": "COFFEE_PRICE",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getTotalCoffeesSold",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getTotalEtherReceived",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalCoffeesSold",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalEtherReceived",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]
