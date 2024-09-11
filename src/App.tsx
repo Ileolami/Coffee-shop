@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Web3 from "web3";
-import ABI from "../contracts/ABI.json";
+import ABI from "../artifacts/contracts/coffee.sol/Coffee.json";
 import ConnectBtn from "./connectWallet";
 
 const App = () => {
@@ -11,74 +11,86 @@ const App = () => {
   const [totalEtherReceived, setTotalEtherReceived] = useState<number | null>(null);
   const [coffeePrice, setCoffeePrice] = useState(0);
   const [ethToUsdRate, setEthToUsdRate] = useState(0);
-
+  const [accountBalance, setAccountBalance] = useState(0);
   
 
 // Function to load web3 and contract
-  const web3 = new Web3(window.ethereum);
-  const contractAddress = "0x8ec6b2b9c5bf9f5c0d7f4c1e2b8011656530c3e3";
-  const contract = new web3.eth.Contract(ABI, contractAddress);
+  const RPC = new Web3(`https://lb.drpc.org/ogrpc?network=sepolia&dkey=${import.meta.env.VITE_dRPC_API_KEY}`);
+  const web3 = new Web3(window.ethereum)
+  const contractAddress = "0xC8644fA354D7c2209cB6a9DFd9c6d18e899B8D97";
+  const contract = new web3.eth.Contract(ABI.abi, contractAddress);
 
 
+// Function to check if connected to Sepolia network
+  const checkNetwork = async () => {
+    const networkId = await web3.eth.net.getId();
+    if (BigInt(networkId) !== BigInt(11155111)) { // Sepolia network ID
+      alert('Please switch to the Sepolia network');
+    }
+  };
 
-// Function to fetch the current price of ETH in USD using Coingecko API
   useEffect(() => {
-    const fetchEthToUsdRate = async () => {
+    checkNetwork();
+  }, []);
+
+  
+  // Function to fetch the current price of ETH in USD using Coingecko API
+    useEffect(() => {
+      const fetchEthToUsdRate = async () => {
+        try {
+          const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+          const data = await response.json();
+          setEthToUsdRate(data.ethereum.usd);
+        } catch (error) {
+          console.error('Error fetching ETH to USD rate:', error);
+        }
+      };
+      fetchEthToUsdRate();
+    }, []);
+
+
+  //Function to show user account balance
+  useEffect(() => {
+    const getAccountBalance = async () => {
+      const accounts = await web3.eth.getAccounts();
+      const balance = await RPC.eth.getBalance(accounts[0]);
+      setAccountBalance(Number(Number(web3.utils.fromWei(balance, 'ether')).toFixed(4)));
+    };
+    getAccountBalance();
+  })
+
+  
+  // Function to fetch total coffees sold
+  useEffect(() => {
+    const fetchTotalCoffeesSold = async () => {
       try {
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
-        const data = await response.json();
-        setEthToUsdRate(data.ethereum.usd);
+        const total = (await contract.methods.getTotalCoffeesSold().call()) as number;
+        setTotalCoffeesSold(Number(total));
       } catch (error) {
-        console.error('Error fetching ETH to USD rate:', error);
+        console.error('Error fetching total coffees sold:', error);
       }
     };
-    fetchEthToUsdRate();
-  }, []);
-
-  // Function to pay coffee from buyer account
-  const buyCoffee = async () => {
-    const accounts = await web3.eth.getAccounts();
-    await contract.methods.buyCoffee(amount).send({ from: accounts[0] });
-  };
-
-  // Function to fetch total coffees sold
-
-  const fetchTotalCoffeesSold = async () => {
-    try {
-      const total = (await contract.methods.getTotalCoffeesSold().call()) as number;
-      console.log("Total coffees sold:", total);
-      setTotalCoffeesSold(Number(total));
-    } catch (error) {
-      console.error('Error fetching total coffees sold:', error);
-    }
-  };
-
-  useEffect(() => {
     fetchTotalCoffeesSold();
   }, []);
-
-
+  
+  
   // Function to fetch total ether received
-  const fechTotalEtherReceived = async () => {
-    try {
-      const total = await contract.methods.getTotalEtherReceived().call();
-      const totalInEther = web3.utils.fromWei(Number(total), 'ether');
-      setTotalEtherReceived(Number(totalInEther));
-    } catch (error) {
-      console.error('Error fetching total ether received:', error);
-    }
-  };
-
   useEffect(() => {
-    fechTotalEtherReceived();
-  }, []);
-
-
+    const getTotalEther = async () => {
+      try {
+        const total = (await contract.methods.getTotalEtherReceived().call()) as number;
+        setTotalEtherReceived(Number(web3.utils.fromWei(total, 'ether')));
+      } catch (error) {
+        console.error('Error fetching total ether received:', error);
+      }
+    }; getTotalEther();
+  })
+  
   // Function to fetch coffee price
-   useEffect(() => {
+  useEffect(() => {
     const fetchCoffeePrice = async () => {
       try {
-        const price = await contract.methods.COFFEE_PRICE().call();
+        const price = await contract.methods.coffeePrice().call();
         const priceInEther = web3.utils.fromWei(Number(price), 'ether');
         setCoffeePrice(Number(priceInEther));
       } catch (error) {
@@ -88,9 +100,20 @@ const App = () => {
     fetchCoffeePrice();
   }, []);
 
+
+  
+  // Function to pay coffee from buyer account
+  const buyCoffee = async () => {
+    const accounts = await web3.eth.getAccounts();
+    await contract.methods.buyCoffee(amount).send({ from: accounts[0] });
+  };
+  
   
   // variable` to display coffee price in USD
   const coffeePriceInUsd = (coffeePrice * ethToUsdRate).toFixed(2);
+
+  // variable to display account balance in USD
+  const accountBalanceInUsd = (accountBalance * ethToUsdRate).toFixed(2);
 
   // variable to display total ether received in USD
   const totalEtherReceivedInUsd = ((totalEtherReceived ?? 0) * Number(ethToUsdRate)).toFixed(2);
@@ -115,6 +138,7 @@ const App = () => {
             <p className="text-lg">Pay for your favorite coffee with Ether</p>
           </div>
           <div className="mb-4">
+            <p className="text-lg mb-2 flex justify-between">Your balance: <span className="font-semibold">{accountBalance} Eth (${accountBalanceInUsd}) </span></p>
             <p className="text-lg mb-2 flex justify-between">Amount of coffees sold: <span className="font-semibold">{totalCoffeesSold}</span></p>
             <p className="text-lg mb-2 flex justify-between">Total ether received: <span className="font-semibold">{totalEtherReceived} Eth (${totalEtherReceivedInUsd})</span></p>
             <p className="text-lg mb-4 flex justify-between">Coffee price: <span className="font-semibold">{coffeePrice} Eth (${coffeePriceInUsd})</span></p>

@@ -2,7 +2,7 @@ import { createThirdwebClient } from "thirdweb";
 
 import { ConnectButton } from "thirdweb/react";
 
-const client = createThirdwebClient({ clientId: 'fb5cd66563844b8e611b13bff43ac875'});
+const client = createThirdwebClient({ clientId: import.meta.env.VITE_CLIENT_ID});
 
 export default function ConnectBtn() {
   return (
