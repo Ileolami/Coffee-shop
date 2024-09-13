@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Web3 from "web3";
-import ABI from "../artifacts/contracts/coffee.sol/Coffee.json";
+import ABI from "../contracts/ABI.json";
 import ConnectBtn from "./connectWallet";
 
 const App = () => {
@@ -18,7 +18,7 @@ const App = () => {
   const RPC = new Web3(`https://lb.drpc.org/ogrpc?network=sepolia&dkey=${import.meta.env.VITE_dRPC_API_KEY}`);
   const web3 = new Web3(window.ethereum)
   const contractAddress = "0xC8644fA354D7c2209cB6a9DFd9c6d18e899B8D97";
-  const contract = new web3.eth.Contract(ABI.abi, contractAddress);
+  const contract = new web3.eth.Contract(ABI, contractAddress);
 
 
 // Function to check if connected to Sepolia network
